@@ -1,0 +1,87 @@
+#include <stdio.h>
+#include "pico/stdlib.h"
+#include "hardware/timer.h"
+
+// Define GPIO Pins based on your new wiring
+const uint TRIGGER_PIN = 1; // Connect to Sensor's RX pin
+const uint ECHO_PIN = 0;    // Connect to Sensor's TX pin
+
+// Function to initialize GPIOs
+void setup_sensor() {
+    gpio_init(TRIGGER_PIN);
+    gpio_set_dir(TRIGGER_PIN, GPIO_OUT);
+    gpio_put(TRIGGER_PIN, 0);
+
+    gpio_init(ECHO_PIN);
+    gpio_set_dir(ECHO_PIN, GPIO_IN);
+}
+
+// Function to measure distance in centimeters
+float get_distance_cm() {
+    // 1. Send a 10-microsecond high pulse to Trigger the sensor
+    gpio_put(TRIGGER_PIN, 1);
+    sleep_us(10);
+    gpio_put(TRIGGER_PIN, 0);
+
+    // 2. Wait for Echo pin to go HIGH (with a timeout to prevent locking up)
+    uint32_t timeout = 20000; // 20ms timeout
+    uint32_t start_wait = time_us_32();
+    while (gpio_get(ECHO_PIN) == 0) {
+        if (time_us_32() - start_wait > timeout) {
+            return -1.0f; // Timeout error
+        }
+    }
+
+    // 3. Record start time when Echo goes high
+    uint32_t pulse_start = time_us_32();
+
+    // 4. Wait for Echo pin to go LOW
+    while (gpio_get(ECHO_PIN) == 1) {
+        if (time_us_32() - pulse_start > timeout) {
+            return -1.0f; // Timeout error
+        }
+    }
+    
+    // 5. Record end time when Echo goes low
+    uint32_t pulse_end = time_us_32();
+
+    // Calculate pulse duration in microseconds
+    uint32_t duration = pulse_end - pulse_start;
+
+    // Distance calculation: (Duration * Speed of Sound) / 2
+    // Speed of sound is ~343 m/s or 0.0343 cm/us
+    float distance = (duration * 0.0343f) / 2.0f;
+
+    return distance;
+}
+
+int main() {
+    stdio_init_all();
+    setup_sensor();
+
+    sleep_ms(2000);
+    printf("5V Sensor Stable Mode Online.\n");
+
+    while (true) {
+        float distance = get_distance_cm();
+
+        // 1. Ignore timeouts or completely open air
+        if (distance < 0) {
+            // Do nothing, or print a single dot to show it's working
+            printf(". "); 
+            fflush(stdout);
+        } 
+        // 2. Ignore the physical blind zone / casing vibrations
+        else if (distance < 28.0f) {
+            // This hides the 14-23cm casing echoes
+            printf("[Blind Zone Noise Ignored]\n");
+        } 
+        // 3. Print actual, valid real-world data
+        else {
+            printf("\n--> Real Distance: %.2f cm\n", distance);
+        }
+
+        // Long cooldown so the waterproof casing stops vibrating
+        sleep_ms(600); 
+    }
+} 
