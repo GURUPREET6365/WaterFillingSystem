@@ -6,7 +6,8 @@
 
 // IR sensor pin
 const uint IR_Pin = 0;
-const uint RELAY_PIN=2;
+const uint RELAY_PIN=13;
+const uint RELAY_PIN1=2;
 
 void setup_sensor()
 {
@@ -20,6 +21,10 @@ void setup_sensor()
     // Relay module
     gpio_init(RELAY_PIN);
     gpio_set_dir(RELAY_PIN, GPIO_OUT);
+
+    // Relay module
+    gpio_init(RELAY_PIN1);
+    gpio_set_dir(RELAY_PIN1, GPIO_OUT);
 }
 
 int main()
@@ -38,6 +43,7 @@ int main()
             // gpio_put(SIGNAL_PIN_LED, 1);
             printf("Bulb is glowing.\n");
             gpio_put(RELAY_PIN, 0);
+            gpio_put(RELAY_PIN1, 0);
             sleep_ms(100);
         } 
         else {
@@ -45,6 +51,7 @@ int main()
             // gpio_put(SIGNAL_PIN_LED, 0);
             printf("Bulb is off.\n");
             gpio_put(RELAY_PIN, 1);
+            gpio_put(RELAY_PIN1, 1);
             sleep_ms(100);
 
         }
