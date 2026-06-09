@@ -38,6 +38,8 @@ int main()
     stdio_init_all();
 
     setup_sensor();
+    gpio_put(RELAY_PIN, 1);
+    gpio_put(RELAY_PIN1, 1);
 
     sleep_ms(2000);
 
@@ -51,7 +53,7 @@ int main()
             gpio_put(RELAY_PIN, 0);
             gpio_put(RELAY_PIN1, 0);
             gpio_put(LEDBulb, 1);
-            sleep_ms(100);
+            sleep_ms(10);
         } 
         else {
             // Path clear. Turn LED OFF
@@ -60,7 +62,7 @@ int main()
             gpio_put(RELAY_PIN, 1);
             gpio_put(RELAY_PIN1, 1);
             gpio_put(LEDBulb, 0);
-            sleep_ms(100);
+            sleep_ms(10);
 
         }
 
